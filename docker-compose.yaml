@@ -1,0 +1,69 @@
+services:
+  php:
+    container_name: php
+    build:
+      context: ./
+      target: php
+    ports:
+      - 9003:9003
+    volumes:
+      - .:/var/www/html/
+    depends_on:
+ #     - postgres
+      - rabbit
+    environment:
+      - XDEBUG_SESSION=PHPSTORM
+
+  nginx:
+    container_name: nginx
+    image: bitnami/nginx:1.19-debian-10
+    ports:
+      - 8383:8080
+    volumes:
+      - ./docker/app.conf:/opt/bitnami/nginx/conf/server_blocks/app.conf
+      - .:/var/www/html/
+    depends_on:
+      - php
+
+#  postgres:
+#    container_name: postgres
+#    image: postgres:11.9
+#    environment:
+#      - POSTGRES_DB=php
+#      - POSTGRES_USER=php
+#      - POSTGRES_PASSWORD=password
+#    volumes:
+#      - db-data:/var/lib/postgresql/data:rw
+#    ports:
+#      - 5434:5432
+
+  rabbit:
+    container_name: rabbit
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+  rabbit-consumer:
+    container_name: rabbit-consumer
+    build:
+      context: ./
+      target: rabbit-consumer
+    volumes:
+      - .:/var/www/html/
+    depends_on:
+      - rabbit
+
+  lambda:
+    build:
+      context: ./
+      target: lambda
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+#volumes:
+#  db-data: {}
