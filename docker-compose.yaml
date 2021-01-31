@@ -14,6 +14,25 @@ services:
     environment:
       - XDEBUG_SESSION=PHPSTORM
 
+  php-consumer:
+    container_name: php-consumer
+    build:
+      context: ./
+      target: php
+      args:
+        PHP_IMAGE: php:8-cli
+    ports:
+      - 9004:9003
+    volumes:
+      - .:/var/www/html/
+      - ./docker/php-consumer.conf:/etc/supervisor/conf.d/php-consumer.conf
+    depends_on:
+      #     - postgres
+      - rabbit
+    environment:
+      - XDEBUG_SESSION=PHPSTORM
+    command: /var/www/html/bin/console messenger:consume async -vvv --time-limit=600 --limit=50 --memory-limit=256M
+
   nginx:
     container_name: nginx
     image: bitnami/nginx:1.19-debian-10
@@ -49,21 +68,22 @@ services:
       - 5672:5672
       - 15672:15672
 
-  rabbit-consumer:
-    container_name: rabbit-consumer
-    build:
-      context: ./
-      target: rabbit-consumer
-    volumes:
-      - .:/var/www/html/
-    depends_on:
-      - rabbit
+#  rabbit-consumer:
+#    container_name: rabbit-consumer
+#    build:
+#      context: ./
+#      target: rabbit-consumer
+#    volumes:
+#      - .:/var/www/html/
+#    depends_on:
+#      - rabbit
 
-  lambda:
-    build:
-      context: ./
-      target: lambda
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+#  lambda:
+#    build:
+#      context: ./
+#      target: lambda
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+
 #volumes:
 #  db-data: {}

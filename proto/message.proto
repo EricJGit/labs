@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package protoc.model;
+
+message Message {
+  int32 id = 1;
+  string activity = 2;
+  string user =3;
+}
